@@ -60,7 +60,10 @@ jobs:
           path: artifact/
           retention-days: 30
 
+  # macOS build temporarily disabled - GitHub runners having issues
+  # TODO: Re-enable when runner issues are resolved
   build-macos:
+    if: false  # Disabled
     runs-on: macos-15-intel
     steps:
       - name: Checkout code
@@ -101,7 +104,7 @@ jobs:
 
   # Create release when a tag is pushed
   release:
-    needs: [build-windows, build-macos]
+    needs: [build-windows]  # Removed build-macos dependency
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -111,23 +114,24 @@ jobs:
           name: BambuStudio-Windows-x64
           path: windows-build
 
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: BambuStudio-macOS
-          path: macos-build
+      # macOS artifact download disabled
+      # - name: Download macOS artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: BambuStudio-macOS
+      #     path: macos-build
 
       - name: Zip builds
         run: |
           cd windows-build && zip -r ../BambuStudio-Windows-x64.zip . && cd ..
-          cd macos-build && zip -r ../BambuStudio-macOS.zip . && cd ..
+          # cd macos-build && zip -r ../BambuStudio-macOS.zip . && cd ..
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             BambuStudio-Windows-x64.zip
-            BambuStudio-macOS.zip
+            # BambuStudio-macOS.zip  # Disabled until macOS build is fixed
           draft: false
           prerelease: false
         env:
