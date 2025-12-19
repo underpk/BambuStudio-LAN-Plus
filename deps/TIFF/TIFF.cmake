@@ -1,9 +1,9 @@
 find_package(OpenGL QUIET REQUIRED)
 
 bambustudio_add_cmake_project(TIFF
-    # Original URL was unavailable, using GitLab mirror
-    URL https://gitlab.com/libtiff/libtiff/-/archive/v4.1.0/libtiff-v4.1.0.zip
-    # URL_HASH SHA256=6F3DBED9D2ECFED33C7192B5C01884078970657FA21B4AD28E3CDF3438EB2419
+    # Using official OSGeo download (more reliable than GitLab)
+    URL https://download.osgeo.org/libtiff/tiff-4.1.0.zip
+    # URL_HASH SHA256 will differ from GitLab archive format
     DEPENDS ${ZLIB_PKG} ${PNG_PKG} ${JPEG_PKG}
     CMAKE_ARGS
         -Dlzma:BOOL=OFF
