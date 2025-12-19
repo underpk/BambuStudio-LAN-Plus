@@ -38,12 +38,15 @@ jobs:
           cmake --build . --config Release -- /m
 
       - name: Build BambuStudio
-        shell: cmd
+        shell: powershell
         run: |
-          if not exist build mkdir build
+          if (!(Test-Path build)) { mkdir build }
           cd build
-          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="..\deps\build\destdir\usr\local"
-          cmake --build . --config Release --target BambuStudio -- /m
+          $depsPath = "${{ github.workspace }}\deps\build\destdir\usr\local"
+          Write-Host "Using deps path: $depsPath"
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$depsPath"
+          cmake --build . --config Release --target BambuStudio
+          cmake --build . --config Release --target BambuStudio_app_gui
 
       - name: Collect files
         shell: bash
