@@ -1,0 +1,87 @@
+================================================================================
+BAMBU STUDIO BUILD INSTRUCTIONS - LAN Device Rename Feature
+================================================================================
+
+Your changes have been saved in git. The modified files are:
+- src/slic3r/GUI/DeviceManager.hpp
+- src/slic3r/GUI/DeviceManager.cpp
+- src/slic3r/GUI/DeviceCore/DevManager.cpp
+- src/slic3r/GUI/SelectMachinePop.cpp
+
+================================================================================
+STEP 1: INSTALL PREREQUISITES
+================================================================================
+
+You need to install these programs (in order):
+
+1. Visual Studio 2022 Community (FREE)
+   Download: https://visualstudio.microsoft.com/vs/community/
+
+   IMPORTANT during installation:
+   - Select "Desktop development with C++" workload
+   - In Individual Components, ensure "MSVC v143" is checked
+   - DO NOT use v144 or higher (breaks Boost compilation)
+
+2. CMake
+   Download: https://cmake.org/download/
+   Get: "Windows x64 Installer"
+
+   IMPORTANT during installation:
+   - Check "Add CMake to the system PATH for all users"
+
+3. Strawberry Perl
+   Download: https://strawberryperl.com/
+   Just install with defaults.
+
+4. pkg-config (via Chocolatey)
+   First install Chocolatey (if you don't have it):
+   - Open PowerShell as Administrator
+   - Run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+   Then install pkg-config:
+   - Run: choco install pkgconfiglite
+
+5. RESTART YOUR COMPUTER after installing everything!
+
+================================================================================
+STEP 2: BUILD
+================================================================================
+
+After installing prerequisites and restarting:
+
+1. Open "x64 Native Tools Command Prompt for VS 2022"
+   (Search for it in Start Menu)
+
+2. Run the build script:
+   cd E:\Desktop\BambuStudio-master
+   build.bat
+
+The build takes 30-60 minutes. When complete, the application will be in:
+   E:\Desktop\BambuStudio-master\install_dir\bin\bambu-studio.exe
+
+================================================================================
+WHAT THE FEATURE DOES
+================================================================================
+
+After building, in BambuStudio:
+1. Go to Device tab > My Device
+2. LAN devices that you have access to (unlocked) will now show an edit icon
+3. Click the edit icon to rename the device
+4. The name is saved locally and persists across restarts
+
+================================================================================
+UPDATING IN THE FUTURE
+================================================================================
+
+Your changes are saved in git. To see what was changed:
+   cd E:\Desktop\BambuStudio-master
+   git log
+   git show
+
+If you download a new version of BambuStudio:
+1. Extract the new version to a new folder
+2. Copy the .git folder from this directory to the new one
+3. Run: git diff
+4. Manually reapply changes or ask Claude to help merge
+
+================================================================================

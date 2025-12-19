@@ -55,7 +55,18 @@ namespace Slic3r
         m_enable_mutil_machine = enable;
     }
 
-    void DeviceManager::start_refresher() { m_refresher->Start(); }
+    void DeviceManager::start_refresher() {
+        // Load saved LAN devices on startup
+        try {
+            load_saved_lan_devices();
+        }
+        catch (...) {
+            BOOST_LOG_TRIVIAL(error) << "start_refresher: load_saved_lan_devices failed";
+        }
+        if (m_refresher) {
+            m_refresher->Start();
+        }
+    }
     void DeviceManager::stop_refresher() { m_refresher->Stop(); }
 
 
@@ -313,7 +324,116 @@ namespace Slic3r
             localMachineList.insert(std::make_pair(dev_id, obj));
         }
 
+        // Persist the LAN device info so it appears on next app startup
+        save_lan_device_info(dev_id, dev_name, dev_ip, printer_type);
+
         return obj;
+    }
+
+    void DeviceManager::save_lan_device_info(const std::string& dev_id, const std::string& dev_name,
+        const std::string& dev_ip, const std::string& printer_type)
+    {
+        try {
+            AppConfig* config = Slic3r::GUI::wxGetApp().app_config;
+            if (!config || dev_id.empty()) return;
+
+            // Save device info as JSON string in the "saved_lan_devices" section
+            json device_info;
+            device_info["dev_name"] = dev_name;
+            device_info["dev_ip"] = dev_ip;
+            device_info["printer_type"] = printer_type;
+
+            config->set_str("saved_lan_devices", dev_id, device_info.dump());
+            // Don't call save() here - it will be saved when app closes or other config changes
+            // This prevents blocking when adding multiple devices
+            BOOST_LOG_TRIVIAL(info) << "save_lan_device_info: queued device " << dev_id;
+        }
+        catch (const std::exception& e) {
+            BOOST_LOG_TRIVIAL(error) << "save_lan_device_info failed: " << e.what();
+        }
+        catch (...) {
+            BOOST_LOG_TRIVIAL(error) << "save_lan_device_info failed with unknown error";
+        }
+    }
+
+    void DeviceManager::load_saved_lan_devices()
+    {
+        try {
+            AppConfig* config = Slic3r::GUI::wxGetApp().app_config;
+            if (!config) return;
+
+            if (!config->has_section("saved_lan_devices")) return;
+
+            // Make a copy to avoid issues with const reference
+            std::map<std::string, std::string> saved_devices = config->get_section("saved_lan_devices");
+            for (const auto& entry : saved_devices) {
+                const std::string& dev_id = entry.first;
+                const std::string& device_json = entry.second;
+
+                if (dev_id.empty() || device_json.empty()) continue;
+
+                // Skip if device already exists (discovered via SSDP)
+                if (localMachineList.find(dev_id) != localMachineList.end()) {
+                    continue;
+                }
+
+                try {
+                    json device_info = json::parse(device_json);
+                    std::string dev_name = device_info.value("dev_name", "Unknown");
+                    std::string dev_ip = device_info.value("dev_ip", "");
+                    std::string printer_type = device_info.value("printer_type", "");
+
+                    // Load saved nickname if available
+                    std::string saved_nickname = config->get("device_nickname", dev_id);
+                    if (!saved_nickname.empty()) {
+                        dev_name = saved_nickname;
+                    }
+
+                    // Create the device object (marked as offline initially)
+                    MachineObject* obj = new MachineObject(this, m_agent, dev_name, dev_id, dev_ip);
+                    if (obj) {
+                        obj->printer_type = _parse_printer_type(printer_type.empty() ? "C11" : printer_type);
+                        obj->GetInfo()->SetConnectionType("lan");
+                        obj->bind_state = "free";
+                        obj->m_is_online = false;  // Mark as offline until SSDP discovers it
+
+                        // Load saved access code
+                        obj->set_access_code(config->get("access_code", dev_id), false);
+                        obj->set_user_access_code(config->get("user_access_code", dev_id), false);
+
+                        localMachineList.insert(std::make_pair(dev_id, obj));
+                        BOOST_LOG_TRIVIAL(info) << "load_saved_lan_devices: loaded device " << dev_id << " (" << dev_name << ")";
+                    }
+                }
+                catch (const std::exception& e) {
+                    BOOST_LOG_TRIVIAL(error) << "load_saved_lan_devices: failed to parse device " << dev_id << ": " << e.what();
+                }
+            }
+        }
+        catch (const std::exception& e) {
+            BOOST_LOG_TRIVIAL(error) << "load_saved_lan_devices failed: " << e.what();
+        }
+        catch (...) {
+            BOOST_LOG_TRIVIAL(error) << "load_saved_lan_devices failed with unknown error";
+        }
+    }
+
+    void DeviceManager::remove_saved_lan_device(const std::string& dev_id)
+    {
+        try {
+            AppConfig* config = Slic3r::GUI::wxGetApp().app_config;
+            if (!config || dev_id.empty()) return;
+
+            config->erase("saved_lan_devices", dev_id);
+            config->erase("device_nickname", dev_id);
+            config->erase("access_code", dev_id);
+            config->erase("user_access_code", dev_id);
+            config->save();
+            BOOST_LOG_TRIVIAL(info) << "remove_saved_lan_device: removed device " << dev_id;
+        }
+        catch (...) {
+            BOOST_LOG_TRIVIAL(error) << "remove_saved_lan_device failed for device " << dev_id;
+        }
     }
 
     int DeviceManager::query_bind_status(std::string& msg)
