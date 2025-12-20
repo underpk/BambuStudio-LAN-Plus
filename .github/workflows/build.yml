@@ -113,16 +113,29 @@ jobs:
           mkdir -p build && cd build
           cmake .. -DCMAKE_PREFIX_PATH="$(pwd)/../deps/build/destdir/usr/local" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
+            -DCMAKE_MACOSX_BUNDLE=ON \
             -DBBL_RELEASE_TO_PUBLIC=1 \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build . --config Release -j$(sysctl -n hw.ncpu)
+
+      - name: Find build output
+        run: |
+          echo "=== Looking for BambuStudio output ==="
+          find build -name "BambuStudio*" -type f 2>/dev/null | head -20
+          find build -name "*.app" -type d 2>/dev/null | head -10
+          ls -la build/src/ || true
+          ls -la build/src/Release/ 2>/dev/null || true
 
       - name: Upload macOS Build
         uses: actions/upload-artifact@v4
         with:
           name: BambuStudio-macOS
-          path: build/src/BambuStudio.app
+          path: |
+            build/src/BambuStudio.app
+            build/src/Release/BambuStudio.app
+            build/src/BambuStudio
           retention-days: 30
+          if-no-files-found: warn
 
   # Create release when a tag is pushed
   release:
