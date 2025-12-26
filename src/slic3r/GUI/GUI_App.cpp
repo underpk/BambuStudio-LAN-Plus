@@ -1231,7 +1231,7 @@ void GUI_App::post_init()
         }
 //#endif
         if (is_editor())
-            mainframe->select_tab(size_t(0));
+            mainframe->select_tab(size_t(MainFrame::tp3DEditor));
         mainframe->Thaw();
         BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << ", end load_gl_resources";
     }
@@ -3144,7 +3144,7 @@ bool GUI_App::on_init_inner()
     mainframe = new MainFrame();
     // hide settings tabs after first Layout
     if (is_editor()) {
-        mainframe->select_tab(size_t(0));
+        mainframe->select_tab(size_t(MainFrame::tp3DEditor));
     }
 
     sidebar().obj_list()->init();
