@@ -13686,9 +13686,9 @@ void Plater::calib_ironing()
 
     // Ironing settings grid: 5 rows (flow %) x 5 columns (speed mm/s)
     // Flow: 5%, 10%, 15%, 20%, 25%
-    // Speed: 20, 30, 40, 50, 60 mm/s
+    // Speed: 20, 30, 60, 50, 40 mm/s (order matches 3MF model labels)
     const int flows[] = {5, 10, 15, 20, 25};
-    const int speeds[] = {20, 30, 40, 50, 60};
+    const int speeds[] = {20, 30, 60, 50, 40};
 
     // Set per-volume ironing settings for each object
     int volume_idx = 0;
