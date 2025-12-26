@@ -1,6 +1,12 @@
 #include "Arrange.hpp"
+#include "BitmapArrange.hpp"
 #include "Print.hpp"
 #include "BoundingBox.hpp"
+
+namespace Slic3r { namespace arrangement {
+// Global flag for space-saving arrangement mode
+bool g_use_actual_silhouette = false;
+}} // namespace
 
 #include <libnest2d/backends/libslic3r/geometries.hpp>
 #include <libnest2d/optimizers/nlopt/subplex.hpp>
@@ -1081,6 +1087,12 @@ void arrange(ArrangePolygons &      items,
              const Points &         bed,
              const ArrangeParams &  params)
 {
+    // Use bitmap-based arrangement when space_saving is enabled
+    if (params.space_saving) {
+        arrange_bitmap(items, excludes, bed, params);
+        return;
+    }
+
     call_with_bed(bed, [&](const auto &bin) {
         arrange(items, excludes, bin, params);
     });

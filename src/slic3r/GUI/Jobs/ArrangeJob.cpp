@@ -541,6 +541,9 @@ void ArrangeJob::prepare()
 {
     params = init_arrange_params(m_plater);
 
+    // Set global flag for space-saving mode so get_arrange_polygon uses actual silhouette
+    arrangement::g_use_actual_silhouette = params.space_saving;
+
     //BBS update extruder params and speed table before arranging
     const Slic3r::DynamicPrintConfig& config = wxGetApp().preset_bundle->full_config();
     auto& print = wxGetApp().plater()->get_partplate_list().get_current_fff_print();
@@ -733,6 +736,9 @@ static std::string concat_strings(const std::set<std::string> &strings,
 
 void ArrangeJob::finalize()
 {
+    // Reset the global silhouette flag
+    arrangement::g_use_actual_silhouette = false;
+
     // BBS: partplate
     PartPlateList &plate_list = m_plater->get_partplate_list();
     // Ignore the arrange result if aborted.
@@ -891,6 +897,7 @@ arrangement::ArrangeParams init_arrange_params(Plater *p)
     params.is_seq_print                        = settings.is_seq_print;
     params.min_obj_distance                    = scaled(settings.distance);
     params.align_to_y_axis                     = settings.align_to_y_axis;
+    params.space_saving                        = settings.space_saving;
 #if !BBL_RELEASE_TO_PUBLIC
     params.save_svg                            = settings.save_svg;
 #endif

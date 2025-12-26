@@ -36,6 +36,10 @@ struct InfiniteBed {
 /// object due to overly large size or invalid geometry.
 static const constexpr int UNARRANGED = -1;
 
+// Global flag for space-saving arrangement mode
+// When true, get_arrange_polygon will use actual silhouette instead of convex hull
+extern bool g_use_actual_silhouette;
+
 /// Input/Output structure for the arrange() function. The poly field will not
 /// be modified during arrangement. Instead, the translation and rotation fields
 /// will mark the needed transformation for the polygon to be in the arranged
@@ -126,6 +130,7 @@ struct ArrangeParams {
     bool  avoid_extrusion_cali_region         = true;
     bool  is_seq_print                        = false;
     bool  align_to_y_axis                     = false;
+    bool  space_saving                        = false; // Use bitmap-based arrangement for hollow detection
     bool  save_svg                            = false;
     bool  plate_has_tree_support              = false;
     double brim_max                            = 0;
@@ -166,6 +171,7 @@ struct ArrangeParams {
         ret += "\"allow_multi_materials_on_same_plate\":" + std::to_string(allow_multi_materials_on_same_plate) + ",";
         ret += "\"avoid_extrusion_cali_region\":" + std::to_string(avoid_extrusion_cali_region) + ",";
         ret += "\"is_seq_print\":" + std::to_string(is_seq_print) + ",";
+        ret += "\"space_saving\":" + std::to_string(space_saving) + ",";
         ret += "\"bed_shrink_x\":" + std::to_string(bed_shrink_x) + ",";
         ret += "\"bed_shrink_y\":" + std::to_string(bed_shrink_y) + ",";
         ret += "\"brim_skirt_distance\":" + std::to_string(brim_skirt_distance) + ",";

@@ -541,6 +541,8 @@ public:
         //BBS: add more arrangeSettings
         bool is_seq_print        = false;
         bool  align_to_y_axis    = false;
+        bool  space_saving       = false; // Use bitmap-based arrangement for hollow detection
+        bool  lay_on_face        = false; // Auto-orient objects to lay flat before arranging
         bool        save_svg            = false; // for debug
         std::string postfix;
         void        reset()
@@ -552,6 +554,8 @@ public:
             avoid_extrusion_cali_region         = true;
             is_seq_print                        = false;
             align_to_y_axis                     = false;
+            space_saving                        = false;
+            lay_on_face                         = false;
         }
     };
 

@@ -242,6 +242,8 @@ set(lisbslic3r_sources
     CustomGCode.hpp
     Arrange.hpp
     Arrange.cpp
+    BitmapArrange.hpp
+    BitmapArrange.cpp
     NormalUtils.cpp
     NormalUtils.hpp
     ObjColorUtils.cpp

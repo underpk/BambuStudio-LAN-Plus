@@ -4088,7 +4088,48 @@ void ModelInstance::get_arrange_polygon(void *ap, const Slic3r::DynamicPrintConf
 
     trafo_instance.set_offset(Vec3d(0, 0, get_offset(Z)));
 
-    Polygon p = get_object()->convex_hull_2d(trafo_instance.get_matrix());
+    arrangement::ArrangePolygon &ret = *(arrangement::ArrangePolygon *) ap;
+
+    // Use actual silhouette for space-saving mode, convex hull otherwise
+    if (arrangement::g_use_actual_silhouette) {
+        // Get the actual 2D projection of the mesh (with concavities preserved)
+        const ModelObject* obj = get_object();
+        if (obj && !obj->volumes.empty()) {
+            // Get merged mesh for the object
+            TriangleMesh mesh = obj->mesh();
+            mesh.transform(trafo_instance.get_matrix());
+
+            // Project mesh to 2D
+            Polygons projection = project_mesh(mesh.its, Transform3d::Identity(), [](){});
+            ExPolygons silhouette = union_ex(projection);
+
+            if (!silhouette.empty()) {
+                // Take the largest contour
+                size_t largest_idx = 0;
+                double largest_area = 0;
+                for (size_t i = 0; i < silhouette.size(); ++i) {
+                    double area = std::abs(silhouette[i].contour.area());
+                    if (area > largest_area) {
+                        largest_area = area;
+                        largest_idx = i;
+                    }
+                }
+                ret.poly = silhouette[largest_idx];
+            } else {
+                // Fallback to convex hull
+                Polygon p = obj->convex_hull_2d(trafo_instance.get_matrix());
+                ret.poly.contour = std::move(p);
+            }
+        } else {
+            // Fallback to convex hull
+            Polygon p = get_object()->convex_hull_2d(trafo_instance.get_matrix());
+            ret.poly.contour = std::move(p);
+        }
+    } else {
+        // Standard convex hull approach
+        Polygon p = get_object()->convex_hull_2d(trafo_instance.get_matrix());
+        ret.poly.contour = std::move(p);
+    }
 
     //    if (!p.points.empty()) {
     //        Polygons pp{p};
@@ -4096,8 +4137,6 @@ void ModelInstance::get_arrange_polygon(void *ap, const Slic3r::DynamicPrintConf
     //        if (!pp.empty()) p = pp.front();
     //    }
 
-    arrangement::ArrangePolygon &ret = *(arrangement::ArrangePolygon *) ap;
-    ret.poly.contour                 = std::move(p);
     ret.translation                  = Vec2crd{scaled(get_offset(X)), scaled(get_offset(Y))};
     ret.rotation                     = 0;
 

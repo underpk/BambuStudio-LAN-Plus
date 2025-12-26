@@ -1268,6 +1268,24 @@ void GLCanvas3D::load_arrange_settings()
     std::string en_rot_sla_str =
         wxGetApp().app_config->get("arrange", "enable_rotation_sla");
 
+    std::string space_saving_fff_str =
+        wxGetApp().app_config->get("arrange", "space_saving_fff");
+
+    std::string space_saving_fff_seqp_str =
+        wxGetApp().app_config->get("arrange", "space_saving_fff_seq_print");
+
+    std::string space_saving_sla_str =
+        wxGetApp().app_config->get("arrange", "space_saving_sla");
+
+    std::string lay_on_face_fff_str =
+        wxGetApp().app_config->get("arrange", "lay_on_face_fff");
+
+    std::string lay_on_face_fff_seqp_str =
+        wxGetApp().app_config->get("arrange", "lay_on_face_fff_seq_print");
+
+    std::string lay_on_face_sla_str =
+        wxGetApp().app_config->get("arrange", "lay_on_face_sla");
+
     if (!dist_fff_str.empty())
         m_arrange_settings_fff.distance = std::stof(dist_fff_str);
 
@@ -1285,6 +1303,24 @@ void GLCanvas3D::load_arrange_settings()
 
     if (!en_rot_sla_str.empty())
         m_arrange_settings_sla.enable_rotation = (en_rot_sla_str == "1" || en_rot_sla_str == "yes");
+
+    if (!space_saving_fff_str.empty())
+        m_arrange_settings_fff.space_saving = (space_saving_fff_str == "1" || space_saving_fff_str == "yes");
+
+    if (!space_saving_fff_seqp_str.empty())
+        m_arrange_settings_fff_seq_print.space_saving = (space_saving_fff_seqp_str == "1" || space_saving_fff_seqp_str == "yes");
+
+    if (!space_saving_sla_str.empty())
+        m_arrange_settings_sla.space_saving = (space_saving_sla_str == "1" || space_saving_sla_str == "yes");
+
+    if (!lay_on_face_fff_str.empty())
+        m_arrange_settings_fff.lay_on_face = (lay_on_face_fff_str == "1" || lay_on_face_fff_str == "yes");
+
+    if (!lay_on_face_fff_seqp_str.empty())
+        m_arrange_settings_fff_seq_print.lay_on_face = (lay_on_face_fff_seqp_str == "1" || lay_on_face_fff_seqp_str == "yes");
+
+    if (!lay_on_face_sla_str.empty())
+        m_arrange_settings_sla.lay_on_face = (lay_on_face_sla_str == "1" || lay_on_face_sla_str == "yes");
 
     //BBS: add specific arrange settings
     m_arrange_settings_fff_seq_print.is_seq_print = true;
@@ -6423,6 +6459,12 @@ bool GLCanvas3D::_render_orient_menu(float left, float right, float bottom, floa
 
     imgui->end();
     ImGuiWrapper::pop_toolbar_style();
+
+    // Save config to disk when settings change
+    if (settings_changed) {
+        appcfg->save();
+    }
+
     return settings_changed;
 }
 
@@ -6473,6 +6515,7 @@ bool GLCanvas3D::_render_arrange_menu(float left, float toolbar_height)
     std::string multi_material_key = "allow_multi_materials_on_same_plate";
     std::string avoid_extrusion_key = "avoid_extrusion_cali_region";
     std::string align_to_y_axis_key = "align_to_y_axis";
+    std::string space_saving_key    = "space_saving";
     std::string save_svg_key        = "save_svg";
     std::string postfix             = settings.postfix;
     //BBS:
@@ -6482,6 +6525,7 @@ bool GLCanvas3D::_render_arrange_menu(float left, float toolbar_height)
     rot_key  += postfix;
     bed_shrink_x_key += postfix;
     bed_shrink_y_key += postfix;
+    space_saving_key += postfix;
 
     ImGui::AlignTextToFramePadding();
     imgui->text(_L("Spacing"));
@@ -6549,6 +6593,17 @@ bool GLCanvas3D::_render_arrange_menu(float left, float toolbar_height)
         if (settings_out.enable_rotation == true) { imgui->disabled_end(); }
     }
 
+    // Space saving arrangement - uses bitmap-based collision detection
+    if (imgui->bbl_checkbox(_L("Space saving"), settings.space_saving)) {
+        settings_out.space_saving = settings.space_saving;
+        appcfg->set("arrange", space_saving_key.c_str(), settings_out.space_saving ? "1" : "0");
+        settings_changed = true;
+    }
+    ImGui::SameLine();
+    imgui->text("(?)");
+    if (ImGui::IsItemHovered())
+        imgui->tooltip(_L("Place objects inside hollow spaces of other objects (e.g., inside an O letter's hole)"), 300.0f);
+
     ImGui::Separator();
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(15.0f, 10.0f));
     if (imgui->button(_L("Arrange"))) {
@@ -6572,6 +6627,7 @@ bool GLCanvas3D::_render_arrange_menu(float left, float toolbar_height)
         appcfg->set("arrange", dist_key, float_to_string_decimal_point(settings_out.distance));
         appcfg->set("arrange", rot_key, settings_out.enable_rotation ? "1" : "0");
         appcfg->set("arrange", align_to_y_axis_key, settings_out.align_to_y_axis ? "1" : "0");
+        appcfg->set("arrange", space_saving_key.c_str(), settings_out.space_saving ? "1" : "0");
         settings_changed = true;
     }
     ImGui::PopStyleVar(1);
@@ -6579,6 +6635,11 @@ bool GLCanvas3D::_render_arrange_menu(float left, float toolbar_height)
 
     //BBS
     ImGuiWrapper::pop_toolbar_style();
+
+    // Save config to disk when settings change
+    if (settings_changed) {
+        appcfg->save();
+    }
 
     return settings_changed;
 }
