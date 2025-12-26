@@ -2,12 +2,9 @@ name: Build BambuStudio
 
 on:
   push:
-    branches: [master, main]
     tags:
-      - 'v*'
-  pull_request:
-    branches: [master, main]
-  workflow_dispatch:  # Allows manual trigger
+      - 'v*'  # Only build when pushing version tags
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions page
 
 permissions:
   contents: write
