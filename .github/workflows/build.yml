@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: deps/build
-          key: deps-windows-${{ hashFiles('deps/**') }}
+          key: deps-windows-${{ hashFiles('deps/CMakeLists.txt', 'deps/*.cmake') }}
           restore-keys: deps-windows-
 
       - name: Build Dependencies
@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: deps/build
-          key: deps-windows-${{ hashFiles('deps/**') }}
+          key: deps-windows-${{ hashFiles('deps/CMakeLists.txt', 'deps/*.cmake') }}
 
       - name: Build BambuStudio
         shell: powershell
@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: deps/build
-          key: deps-macos-${{ hashFiles('deps/**') }}
+          key: deps-macos-${{ hashFiles('deps/CMakeLists.txt', 'deps/*.cmake') }}
           restore-keys: deps-macos-
 
       - name: Build Dependencies
@@ -106,7 +106,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: deps/build
-          key: deps-macos-${{ hashFiles('deps/**') }}
+          key: deps-macos-${{ hashFiles('deps/CMakeLists.txt', 'deps/*.cmake') }}
 
       - name: Build BambuStudio
         run: |
