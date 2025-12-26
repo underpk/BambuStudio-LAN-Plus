@@ -212,7 +212,9 @@ bool Print::invalidate_state_by_config_options(const ConfigOptionResolver & /* n
         "filament_notes",
         "process_notes",
         "printer_notes",
-        "filament_velocity_adaptation_factor"
+        "filament_velocity_adaptation_factor",
+        // Resonance avoidance
+        "resonance_avoidance", "min_resonance_avoidance_speed", "max_resonance_avoidance_speed"
     };
 
     static std::unordered_set<std::string> steps_ignore;

@@ -1014,6 +1014,10 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionInt,                  seam_slope_steps))
     ((ConfigOptionBool,                 seam_slope_inner_walls))
     ((ConfigOptionBool,                 embedding_wall_into_infill))
+    // Resonance avoidance
+    ((ConfigOptionBools,                resonance_avoidance))
+    ((ConfigOptionFloatsNullable,       min_resonance_avoidance_speed))
+    ((ConfigOptionFloatsNullable,       max_resonance_avoidance_speed))
 )
 
 PRINT_CONFIG_CLASS_DEFINE(

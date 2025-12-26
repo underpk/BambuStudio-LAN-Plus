@@ -2689,6 +2689,12 @@ void TabPrint::build()
         optgroup->append_single_option_line("support_speed", "", 0);
         optgroup->append_single_option_line("support_interface_speed", "", 0);
 
+        // Resonance avoidance
+        optgroup = page->new_optgroup(L("Resonance avoidance"), L"param_speed", 15);
+        optgroup->append_single_option_line("resonance_avoidance", "", 0);
+        optgroup->append_single_option_line("min_resonance_avoidance_speed", "", 0);
+        optgroup->append_single_option_line("max_resonance_avoidance_speed", "", 0);
+
         optgroup = page->new_optgroup(L("Travel speed"), L"param_travel_speed", 15);
         optgroup->append_single_option_line("travel_speed", "", 0);
 

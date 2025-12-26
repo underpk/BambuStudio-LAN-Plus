@@ -5041,9 +5041,12 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
     // extrude along the path
     std::string gcode;
 
-    const auto  speed_for_path = [&speed, &small_peri_speed](const ExtrusionPath &path) {
-        // don't apply small perimeter setting for bridge/non-perimeters
-        const bool is_small_peri = is_perimeter(path.role()) && !is_bridge(path.role()) && small_peri_speed > 0;
+    const auto  speed_for_path = [&speed, &small_peri_speed](const ExtrusionPath &path, bool &resonance_avoidance_flag) {
+        // don't apply small perimeter setting for overhangs/bridges/non-perimeters
+        const bool is_small_peri = is_perimeter(path.role()) && !is_bridge(path.role()) && small_peri_speed > 0 &&
+                                   (path.get_overhang_degree() == 0 || path.get_overhang_degree() > 5);
+        if (is_small_peri)
+            resonance_avoidance_flag = false;
         return !is_small_peri ? speed :
             (speed == -1) ? small_peri_speed : std::min(small_peri_speed, speed);
     };
@@ -5101,7 +5104,9 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
             }
             // Then extrude it
             for (const auto &p : new_loop.get_all_paths()) {
-                gcode += this->_extrude(*p, description, speed_for_path(*p), set_holes_and_compensation_speed);
+                // Reset resonance avoidance state from config for each path
+                m_resonance_avoidance = m_config.resonance_avoidance.get_at(cur_extruder_index());
+                gcode += this->_extrude(*p, description, speed_for_path(*p, m_resonance_avoidance), set_holes_and_compensation_speed);
             }
             set_last_scarf_seam_flag(true);
 
@@ -5129,7 +5134,9 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
         }
 
         for (ExtrusionPaths::iterator path = paths.begin(); path != paths.end(); ++path) {
-            gcode += this->_extrude(*path, description, speed_for_path(*path), set_holes_and_compensation_speed);
+            // Reset resonance avoidance state from config for each path
+            m_resonance_avoidance = m_config.resonance_avoidance.get_at(cur_extruder_index());
+            gcode += this->_extrude(*path, description, speed_for_path(*path, m_resonance_avoidance), set_holes_and_compensation_speed);
         }
         set_last_scarf_seam_flag(false);
     }
@@ -5980,6 +5987,11 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
             else if (m_config.enable_overhang_speed.get_at(cur_extruder_index())) {
                 double new_speed = 0;
                 new_speed        = get_overhang_degree_corr_speed(speed, path.overhang_degree);
+                // Disable resonance avoidance for high-speed overhangs
+                if (m_resonance_avoidance && new_speed > 0) {
+                    if (new_speed > m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index()))
+                        m_resonance_avoidance = false;
+                }
                 speed = new_speed == 0.0 ? speed : new_speed;
             }
         } else if (path.role() == erOverhangPerimeter && path.overhang_degree == 5) {
@@ -6066,6 +6078,15 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
 
     if (do_slowdown_by_height)
         speed = std::min(speed, desiredMaxSpeed);
+
+    // Apply resonance avoidance: if speed is in resonance zone, reduce to minimum
+    if (m_resonance_avoidance && path.role() == erExternalPerimeter) {
+        if (speed <= m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index())) {
+            speed = std::min(speed, m_config.min_resonance_avoidance_speed.get_at(cur_extruder_index()));
+        }
+        m_resonance_avoidance = true;  // Reset for next path
+    }
+
     double F = speed * 60;  // convert mm/sec to mm/min
 
     // extrude arc or line

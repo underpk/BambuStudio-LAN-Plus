@@ -587,6 +587,9 @@ private:
     int m_start_gcode_filament = -1;
     std::string m_filament_instances_code;
 
+    // Resonance avoidance state flag
+    bool m_resonance_avoidance = true;
+
     std::set<unsigned int>                  m_initial_layer_extruders;
     std::vector<std::vector<unsigned int>>  m_sorted_layer_filaments;
     // BBS

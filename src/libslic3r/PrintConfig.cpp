@@ -2748,6 +2748,35 @@ void PrintConfigDef::init_fff_params()
     def->nullable = true;
     def->set_default_value(new ConfigOptionFloatsNullable{30});
 
+    // Resonance avoidance
+    def = this->add("resonance_avoidance", coBools);
+    def->label = L("Resonance avoidance");
+    def->category = L("Speed");
+    def->tooltip = L("Reduce outer wall speed to avoid the resonance zone of the printer, "
+        "preventing ringing on the surface. Disable when testing ringing.");
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionBools{ false });
+
+    def = this->add("min_resonance_avoidance_speed", coFloats);
+    def->label = L("Min");
+    def->category = L("Speed");
+    def->tooltip = L("Minimum speed of resonance avoidance.");
+    def->sidetext = L("mm/s");
+    def->min = 0;
+    def->mode = comAdvanced;
+    def->nullable = true;
+    def->set_default_value(new ConfigOptionFloatsNullable{70});
+
+    def = this->add("max_resonance_avoidance_speed", coFloats);
+    def->label = L("Max");
+    def->category = L("Speed");
+    def->tooltip = L("Maximum speed of resonance avoidance.");
+    def->sidetext = L("mm/s");
+    def->min = 0;
+    def->mode = comAdvanced;
+    def->nullable = true;
+    def->set_default_value(new ConfigOptionFloatsNullable{120});
+
     // BBS
     def          = this->add("precise_z_height", coBool);
     def->label   = L("Precise Z height");
@@ -6371,6 +6400,9 @@ std::set<std::string> print_options_with_variant = {
     "slowdown_end_acc", //coFloats
     "bridge_speed",
     "gap_infill_speed",
+    "resonance_avoidance", //coBools
+    "min_resonance_avoidance_speed", //coFloats
+    "max_resonance_avoidance_speed", //coFloats
     "support_speed",
     "support_interface_speed",
     "travel_speed",
