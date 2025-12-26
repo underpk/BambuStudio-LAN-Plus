@@ -1,7 +1,7 @@
 ![image](https://user-images.githubusercontent.com/106916061/179006347-497d24c0-9bd6-45b7-8c49-d5cc8ecfe5d7.png)
-# BambuStudio (Modified)
+# BambuStudio LAN Plus
 
-This is a modified version of BambuStudio with additional features and CMake 4.x compatibility.
+A modified version of BambuStudio with LAN device persistence, calibration tools, and arrangement improvements.
 
 ## Downloads
 
@@ -10,23 +10,36 @@ This is a modified version of BambuStudio with additional features and CMake 4.x
 - Windows x64: `BambuStudio-Windows-x64.zip`
 - macOS: `BambuStudio-macOS.zip`
 
-## New Features in This Modified Version
+## New Features
 
 ### LAN Device Persistence
-- LAN-connected printers are now saved and persist after app restart
+- LAN-connected printers are saved and persist after app restart
 - Custom nicknames can be set for LAN printers
 - Devices show as "offline" until discovered on the network
 
-### YOLO Flow Calibration (from OrcaSlicer)
-- **YOLO (Recommended)** - Single-pass flow calibration with 0.01 step precision
-- **YOLO (perfectionist version)** - Higher precision with 0.005 step
-- Access via: Calibration menu > Flow rate > YOLO options
+### Space Saving Arrangement (from Rhoban/Plater)
+- Bitmap-based collision detection for tighter object packing
+- Uses actual 2D silhouette instead of convex hull
+- Respects concave shapes and holes when arranging
+- Enable via: Arrange menu > Space Saving checkbox
 
-### CMake 4.x Compatibility
-- Builds with modern CMake 4.x (tested with 4.2.1)
+### Calibration Tools
+- **YOLO Flow Calibration** (from OrcaSlicer) - Single-pass flow calibration
+- **Ironing Calibration** (from QD3D/MakerWorld) - Test pattern for optimal ironing settings
+- **Resonance Avoidance** (from QIDIStudio) - Reduces print vibrations
+
+### UI Improvements
+- **Prepare Page Default** - App opens directly to Prepare page
+- **Duplicate Object Count** - Shows (1/6), (2/6), etc. for same-named models in object list
+
+### Build Improvements
+- CMake 4.x compatibility
 - Fixed dependency build issues
 
-See [MODIFICATIONS.md](MODIFICATIONS.md) for detailed technical information.
+## Known Issues
+- **Space Saving**: Does not support manually rotated models. Arrange models before rotating them.
+
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for version history.
 
 ---
 
