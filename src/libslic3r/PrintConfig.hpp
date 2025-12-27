@@ -864,6 +864,11 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionInt,                 support_threshold_angle))
     ((ConfigOptionFloat,               support_object_xy_distance))
     ((ConfigOptionFloat,               support_object_first_layer_gap))
+    // Orca: Support interface ironing
+    ((ConfigOptionBool,                support_ironing))
+    ((ConfigOptionEnum<InfillPattern>, support_ironing_pattern))
+    ((ConfigOptionPercent,             support_ironing_flow))
+    ((ConfigOptionFloat,               support_ironing_spacing))
     ((ConfigOptionFloat,               xy_hole_compensation))
     ((ConfigOptionFloat,               xy_contour_compensation))
     //BBS auto hole contour compensation

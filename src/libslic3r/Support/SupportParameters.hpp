@@ -113,9 +113,18 @@ struct SupportParameters {
 
         this->base_angle = Geometry::deg2rad(float(object_config.support_angle.value));
         this->interface_angle = Geometry::deg2rad(float(object_config.support_angle.value + 90.));
-        this->interface_spacing = object_config.support_interface_spacing.value + this->support_material_interface_flow.spacing();
+
+        // Orca: Support interface ironing
+        this->ironing = object_config.support_ironing;
+        this->ironing_flow = support_material_interface_flow.with_height(support_material_interface_flow.height() * 0.01 * object_config.support_ironing_flow.value);
+        this->ironing_spacing = object_config.support_ironing_spacing;
+        this->ironing_pattern = object_config.support_ironing_pattern;
+
+        // Orca: Force solid support interface when using support ironing
+        this->interface_spacing = (this->ironing ? 0 : object_config.support_interface_spacing.value) + this->support_material_interface_flow.spacing();
         this->interface_density = std::min(1., this->support_material_interface_flow.spacing() / this->interface_spacing);
-	    double raft_interface_spacing = object_config.support_interface_spacing.value + this->raft_interface_flow.spacing();
+        // Orca: Force solid support interface when using support ironing
+	    double raft_interface_spacing = (this->ironing ? 0 : object_config.support_interface_spacing.value) + this->raft_interface_flow.spacing();
 	    this->raft_interface_density = std::min(1., this->raft_interface_flow.spacing() / raft_interface_spacing);
         this->support_spacing = object_config.support_base_pattern_spacing.value + this->support_material_flow.spacing();
         this->support_density = std::min(1., this->support_material_flow.spacing() / this->support_spacing);
@@ -292,6 +301,12 @@ struct SupportParameters {
     bool                    with_sheath;
     // Branches of organic supports with area larger than this threshold will be extruded with double lines.
     double                  tree_branch_diameter_double_wall_area_scaled = 0.25 * sqr(scaled<double>(5.0)) * M_PI;;
+
+    // Orca: Support interface ironing
+    bool                    ironing;
+    Flow                    ironing_flow;
+    InfillPattern           ironing_pattern;
+    float                   ironing_spacing;
 
     float 					raft_angle_1st_layer;
     float 					raft_angle_base;
