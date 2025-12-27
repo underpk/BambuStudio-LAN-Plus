@@ -1773,6 +1773,16 @@ void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
         m_config_manipulation.apply(m_config, &new_conf);
     }
 
+    // Orca: When sacrificial layer is selected for counterbore bridging, set bridge density to 50%
+    if (opt_key == "counterbore_hole_bridging") {
+        auto counterbore_option = m_config->option<ConfigOptionEnum<CounterboreHoleBridgingOption>>("counterbore_hole_bridging");
+        if (counterbore_option && counterbore_option->value == chbFilled) {
+            DynamicPrintConfig new_conf = *m_config;
+            new_conf.set_key_value("bridge_density", new ConfigOptionPercent(50));
+            m_config_manipulation.apply(m_config, &new_conf);
+        }
+    }
+
     if (opt_key == "single_extruder_multi_material" || opt_key == "extruders_count" )
         update_wiping_button_visibility();
 
@@ -2746,6 +2756,13 @@ void TabPrint::build()
         optgroup->append_single_option_line("support_filament", "support#support-filament");
         optgroup->append_single_option_line("support_interface_filament", "support#support-filament");
         optgroup->append_single_option_line("support_interface_not_for_body", "support#support-filament");
+
+        // Orca: Support interface ironing
+        optgroup = page->new_optgroup(L("Support ironing"), L"param_ironing");
+        optgroup->append_single_option_line("support_ironing");
+        optgroup->append_single_option_line("support_ironing_pattern");
+        optgroup->append_single_option_line("support_ironing_flow");
+        optgroup->append_single_option_line("support_ironing_spacing");
 
         //optgroup = page->new_optgroup(L("Options for support material and raft"));
 
