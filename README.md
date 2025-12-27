@@ -1,7 +1,9 @@
 ![image](https://user-images.githubusercontent.com/106916061/179006347-497d24c0-9bd6-45b7-8c49-d5cc8ecfe5d7.png)
 # BambuStudio LAN Plus
 
-A modified version of BambuStudio with LAN device persistence, calibration tools, and arrangement improvements.
+**Latest Version: v1.2.0** | Based on Bambu Studio v2.04.00.70
+
+A modified version of BambuStudio with LAN device persistence, calibration tools, arrangement improvements, and additional features ported from OrcaSlicer.
 
 ## Downloads
 
@@ -11,6 +13,24 @@ A modified version of BambuStudio with LAN device persistence, calibration tools
 - macOS: `BambuStudio-macOS.zip`
 
 ## New Features
+
+### OrcaSlicer Features (v1.2.0)
+
+#### Seam Improvements
+- **Aligned Back Seam Position** - Places seams at the back of the model, aligned vertically for a cleaner appearance
+
+#### Bridge Settings
+- **External/Internal Bridge Density** - Separate control for external bridge density (visible surfaces) and internal bridge density (hidden surfaces)
+- **Bridge Counterbore Holes** - Creates bridges over counterbore holes without requiring support:
+  - None: No bridging
+  - Partially bridged: Only bridge detectable areas
+  - Sacrificial layer: Full bridge layer (auto-sets bridge density to 50%)
+
+#### Support Improvements
+- **Support Interface Ironing** - Applies a second ironing pass on support interfaces with low flow material for smoother surfaces:
+  - Pattern: rectilinear/concentric
+  - Flow rate (default 10%)
+  - Line spacing (default 0.1mm)
 
 ### LAN Device Persistence
 - LAN-connected printers are saved and persist after app restart
@@ -40,6 +60,15 @@ A modified version of BambuStudio with LAN device persistence, calibration tools
 - **Space Saving**: Does not support manually rotated models. Arrange models before rotating them.
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for version history.
+
+---
+
+## Credits
+
+Features ported from:
+- **[OrcaSlicer](https://github.com/SoftFever/OrcaSlicer)** - Seam, bridge, and support improvements
+- **[Rhoban/Plater](https://github.com/Rhoban/Plater)** - Space saving arrangement algorithm
+- **[QIDIStudio](https://github.com/QIDITECH/QIDIStudio)** - Resonance avoidance
 
 ---
 
