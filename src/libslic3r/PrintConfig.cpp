@@ -210,6 +210,14 @@ static t_config_enum_values s_keys_map_TopOneWallType {
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(TopOneWallType)
 
+// Orca: Bridge counterbore holes
+static t_config_enum_values s_keys_map_CounterboreHoleBridgingOption {
+    { "none", chbNone },
+    { "partiallybridge", chbBridges },
+    { "sacrificiallayer", chbFilled }
+};
+CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(CounterboreHoleBridgingOption)
+
 //BBS
 static t_config_enum_values s_keys_map_WallInfillOrder {
     { "inner wall/outer wall/infill",     int(WallInfillOrder::InnerOuterInfill) },
@@ -1115,6 +1123,23 @@ void PrintConfigDef::init_fff_params()
     def->max = 100;
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionPercent(100));
+
+    def = this->add("counterbore_hole_bridging", coEnum);
+    def->label = L("Bridge counterbore holes");
+    def->category = L("Quality");
+    def->tooltip = L("This option creates bridges for counterbore holes, allowing them to be printed without support.\n\n"
+                     "None: No bridge is created\n"
+                     "Partially bridged: Only the bridgeable area will be bridged\n"
+                     "Sacrificial layer: A full sacrificial bridge layer is created");
+    def->mode = comAdvanced;
+    def->enum_keys_map = &ConfigOptionEnum<CounterboreHoleBridgingOption>::get_enum_values();
+    def->enum_values.emplace_back("none");
+    def->enum_values.emplace_back("partiallybridge");
+    def->enum_values.emplace_back("sacrificiallayer");
+    def->enum_labels.emplace_back(L("None"));
+    def->enum_labels.emplace_back(L("Partially bridged"));
+    def->enum_labels.emplace_back(L("Sacrificial layer"));
+    def->set_default_value(new ConfigOptionEnum<CounterboreHoleBridgingOption>(chbNone));
 
     def = this->add("top_solid_infill_flow_ratio", coFloat);
     def->label = L("Top surface flow ratio");

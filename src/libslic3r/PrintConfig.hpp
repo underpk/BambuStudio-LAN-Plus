@@ -105,6 +105,13 @@ enum class PrintSequence {
     Count,
 };
 
+// Orca: Bridge counterbore holes
+enum CounterboreHoleBridgingOption {
+    chbNone,
+    chbBridges,    // Partially bridged
+    chbFilled      // Sacrificial layer
+};
+
 enum class SlicingMode
 {
     // Regular, applying ClipperLib::pftNonZero rule when creating ExPolygons.
@@ -440,6 +447,7 @@ CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(PrintHostType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(AuthorizationType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(PerimeterGeneratorType)
 CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(TopOneWallType)
+CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS(CounterboreHoleBridgingOption)
 #undef CONFIG_OPTION_ENUM_DECLARE_STATIC_MAPS
 
 // Defines each and every confiuration option of Slic3r, including the properties of the GUI dialogs.
@@ -916,6 +924,7 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat, bridge_flow))
     ((ConfigOptionPercent, bridge_density))
     ((ConfigOptionPercent, internal_bridge_density))
+    ((ConfigOptionEnum<CounterboreHoleBridgingOption>, counterbore_hole_bridging))
     ((ConfigOptionFloatsNullable, overhang_totally_speed))
     ((ConfigOptionFloatsNullable, bridge_speed))
     ((ConfigOptionEnum<EnsureVerticalThicknessLevel>, ensure_vertical_shell_thickness))

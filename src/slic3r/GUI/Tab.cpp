@@ -2590,6 +2590,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("bridge_flow","parameter/bridge");
         optgroup->append_single_option_line("bridge_density","parameter/bridge");
         optgroup->append_single_option_line("internal_bridge_density","parameter/bridge");
+        optgroup->append_single_option_line("counterbore_hole_bridging","parameter/bridge");
         optgroup->append_single_option_line("thick_bridges","parameter/bridge");
         optgroup->append_single_option_line("print_flow_ratio");
         optgroup->append_single_option_line("top_solid_infill_flow_ratio","parameter/quality-advance-settings");

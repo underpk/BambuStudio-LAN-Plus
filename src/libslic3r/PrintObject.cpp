@@ -1,5 +1,6 @@
 #include "Exception.hpp"
 #include "Print.hpp"
+#include "PrintConfig.hpp"
 #include "BoundingBox.hpp"
 #include "ClipperUtils.hpp"
 #include "ElephantFootCompensation.hpp"
@@ -1416,6 +1417,13 @@ void PrintObject::detect_surfaces_type(std::vector<std::vector<SurfaceCollection
                     // collapse very narrow parts (using the safety offset in the diff is not enough)
                     float        offset = layerm->flow(frExternalPerimeter).scaled_width() / 10.f;
 
+                    // Orca: counterbore hole bridging - create extended slices for chbFilled mode
+                    ExPolygons layerm_slices_surfaces = to_expolygons(layerm->slices.surfaces);
+                    // no_perimeter_full_bridge allow to put bridges where there are nothing, hence adding area to slice, that's why we need to start from the result of PerimeterGenerator.
+                    if (layerm->region().config().counterbore_hole_bridging.value == chbFilled) {
+                        layerm_slices_surfaces = union_ex(layerm_slices_surfaces, to_expolygons(layerm->fill_surfaces.surfaces));
+                    }
+
                     bool detect_top = spiral_mode || layerm->region().config().top_shell_layers;
                     bool detect_bottom = spiral_mode || layerm->region().config().bottom_shell_layers;
 
@@ -1425,8 +1433,8 @@ void PrintObject::detect_surfaces_type(std::vector<std::vector<SurfaceCollection
                     if (detect_top) {
                         if (upper_layer) {
                             ExPolygons upper_slices = interface_shells ?
-                                diff_ex(layerm->slices.surfaces, upper_layer->m_regions[region_id]->slices.surfaces, ApplySafetyOffset::Yes) :
-                                diff_ex(layerm->slices.surfaces, upper_layer->lslices, ApplySafetyOffset::Yes);
+                                diff_ex(layerm_slices_surfaces, upper_layer->m_regions[region_id]->slices.surfaces, ApplySafetyOffset::Yes) :
+                                diff_ex(layerm_slices_surfaces, upper_layer->lslices, ApplySafetyOffset::Yes);
                             surfaces_append(top, opening_ex(upper_slices, offset), stTop);
                         }
                         else {
@@ -1455,7 +1463,7 @@ void PrintObject::detect_surfaces_type(std::vector<std::vector<SurfaceCollection
                             surfaces_append(
                                 bottom,
                                 opening_ex(
-                                    diff_ex(layerm->slices.surfaces, lower_layer->lslices, ApplySafetyOffset::Yes),//完全悬空
+                                    diff_ex(layerm_slices_surfaces, lower_layer->lslices, ApplySafetyOffset::Yes),//完全悬空
                                     offset),
                                 surface_type_bottom_other);
                             // if user requested internal shells, we need to identify surfaces
@@ -1467,7 +1475,7 @@ void PrintObject::detect_surfaces_type(std::vector<std::vector<SurfaceCollection
                                     bottom,
                                     opening_ex(
                                         diff_ex(
-                                            intersection(layerm->slices.surfaces, lower_layer->lslices), // 先扣掉完全悬空
+                                            intersection(layerm_slices_surfaces, lower_layer->lslices), // 先扣掉完全悬空
                                             lower_layer->m_regions[region_id]->slices.surfaces,//再扣掉同材料的区域
                                             ApplySafetyOffset::Yes),
                                         offset),
