@@ -1034,6 +1034,9 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionBools,                resonance_avoidance))
     ((ConfigOptionFloatsNullable,       min_resonance_avoidance_speed))
     ((ConfigOptionFloatsNullable,       max_resonance_avoidance_speed))
+    // Resonance avoidance zone 2
+    ((ConfigOptionFloatsNullable,       min_resonance_avoidance_speed_2))
+    ((ConfigOptionFloatsNullable,       max_resonance_avoidance_speed_2))
 )
 
 PRINT_CONFIG_CLASS_DEFINE(

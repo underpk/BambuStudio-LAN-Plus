@@ -2828,6 +2828,27 @@ void PrintConfigDef::init_fff_params()
     def->nullable = true;
     def->set_default_value(new ConfigOptionFloatsNullable{120});
 
+    // Resonance avoidance zone 2
+    def = this->add("min_resonance_avoidance_speed_2", coFloats);
+    def->label = L("Min");
+    def->category = L("Speed");
+    def->tooltip = L("Minimum speed of resonance avoidance zone 2. Set to 0 to disable zone 2.");
+    def->sidetext = L("mm/s");
+    def->min = 0;
+    def->mode = comAdvanced;
+    def->nullable = true;
+    def->set_default_value(new ConfigOptionFloatsNullable{0});
+
+    def = this->add("max_resonance_avoidance_speed_2", coFloats);
+    def->label = L("Max");
+    def->category = L("Speed");
+    def->tooltip = L("Maximum speed of resonance avoidance zone 2. Set to 0 to disable zone 2.");
+    def->sidetext = L("mm/s");
+    def->min = 0;
+    def->mode = comAdvanced;
+    def->nullable = true;
+    def->set_default_value(new ConfigOptionFloatsNullable{0});
+
     // BBS
     def          = this->add("precise_z_height", coBool);
     def->label   = L("Precise Z height");
@@ -6504,6 +6525,8 @@ std::set<std::string> print_options_with_variant = {
     "resonance_avoidance", //coBools
     "min_resonance_avoidance_speed", //coFloats
     "max_resonance_avoidance_speed", //coFloats
+    "min_resonance_avoidance_speed_2", //coFloats
+    "max_resonance_avoidance_speed_2", //coFloats
     "support_speed",
     "support_interface_speed",
     "travel_speed",

@@ -5987,9 +5987,12 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
             else if (m_config.enable_overhang_speed.get_at(cur_extruder_index())) {
                 double new_speed = 0;
                 new_speed        = get_overhang_degree_corr_speed(speed, path.overhang_degree);
-                // Disable resonance avoidance for high-speed overhangs
+                // Disable resonance avoidance for high-speed overhangs (check both zones)
                 if (m_resonance_avoidance && new_speed > 0) {
-                    if (new_speed > m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index()))
+                    double max_zone1 = m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index());
+                    double max_zone2 = m_config.max_resonance_avoidance_speed_2.get_at(cur_extruder_index());
+                    // Only disable if speed exceeds BOTH zones (or zone 2 is disabled)
+                    if (new_speed > max_zone1 && (max_zone2 <= 0 || new_speed > max_zone2))
                         m_resonance_avoidance = false;
                 }
                 speed = new_speed == 0.0 ? speed : new_speed;
@@ -6081,8 +6084,18 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
 
     // Apply resonance avoidance: if speed is in resonance zone, reduce to minimum
     if (m_resonance_avoidance && path.role() == erExternalPerimeter) {
-        if (speed <= m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index())) {
-            speed = std::min(speed, m_config.min_resonance_avoidance_speed.get_at(cur_extruder_index()));
+        double min_zone1 = m_config.min_resonance_avoidance_speed.get_at(cur_extruder_index());
+        double max_zone1 = m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index());
+        double min_zone2 = m_config.min_resonance_avoidance_speed_2.get_at(cur_extruder_index());
+        double max_zone2 = m_config.max_resonance_avoidance_speed_2.get_at(cur_extruder_index());
+
+        // Check Zone 1
+        if (speed >= min_zone1 && speed <= max_zone1) {
+            speed = min_zone1;
+        }
+        // Check Zone 2 (if enabled - max > 0)
+        else if (max_zone2 > 0 && speed >= min_zone2 && speed <= max_zone2) {
+            speed = min_zone2;
         }
         m_resonance_avoidance = true;  // Reset for next path
     }

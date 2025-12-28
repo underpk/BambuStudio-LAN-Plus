@@ -984,7 +984,8 @@ static std::vector<std::string> s_Preset_print_options {
     "seam_slope_steps", "seam_slope_inner_walls", "role_base_wipe_speed", "seam_slope_gap", "precise_outer_wall",
     "interlocking_beam", "interlocking_orientation", "interlocking_beam_layer_count", "interlocking_depth", "interlocking_boundary_avoidance", "interlocking_beam_width", "embedding_wall_into_infill",
     // Resonance avoidance
-    "resonance_avoidance", "min_resonance_avoidance_speed", "max_resonance_avoidance_speed" };
+    "resonance_avoidance", "min_resonance_avoidance_speed", "max_resonance_avoidance_speed",
+    "min_resonance_avoidance_speed_2", "max_resonance_avoidance_speed_2" };
 
 static std::vector<std::string> s_Preset_filament_options{/*"filament_colour", */ "default_filament_colour", "required_nozzle_HRC", "filament_diameter", "volumetric_speed_coefficients", "filament_type",
                                                           "filament_soluble", "filament_is_support", "filament_printable", "filament_scarf_seam_type", "filament_scarf_height",
