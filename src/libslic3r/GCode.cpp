@@ -6082,7 +6082,9 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
     if (do_slowdown_by_height)
         speed = std::min(speed, desiredMaxSpeed);
 
-    // Apply resonance avoidance: if speed is in resonance zone, reduce to minimum
+    // Apply resonance avoidance: if speed is in resonance zone, adjust to exit zone
+    // Lower half of zone → reduce to min (go below zone)
+    // Upper half of zone → increase to max (go above zone)
     if (m_resonance_avoidance && path.role() == erExternalPerimeter) {
         double min_zone1 = m_config.min_resonance_avoidance_speed.get_at(cur_extruder_index());
         double max_zone1 = m_config.max_resonance_avoidance_speed.get_at(cur_extruder_index());
@@ -6091,11 +6093,21 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
 
         // Check Zone 1
         if (speed >= min_zone1 && speed <= max_zone1) {
-            speed = min_zone1;
+            double mid_zone1 = (min_zone1 + max_zone1) / 2.0;
+            if (speed < mid_zone1) {
+                speed = min_zone1;  // Lower half: go below zone
+            } else {
+                speed = max_zone1;  // Upper half: go above zone
+            }
         }
         // Check Zone 2 (if enabled - max > 0)
         else if (max_zone2 > 0 && speed >= min_zone2 && speed <= max_zone2) {
-            speed = min_zone2;
+            double mid_zone2 = (min_zone2 + max_zone2) / 2.0;
+            if (speed < mid_zone2) {
+                speed = min_zone2;  // Lower half: go below zone
+            } else {
+                speed = max_zone2;  // Upper half: go above zone
+            }
         }
         m_resonance_avoidance = true;  // Reset for next path
     }
