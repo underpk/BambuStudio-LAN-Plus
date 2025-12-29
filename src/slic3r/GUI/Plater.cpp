@@ -3735,9 +3735,7 @@ void Sidebar::sync_ams_list(bool is_from_big_sync_btn)
         p->plater->pop_warning_and_go_to_device_page("", Plater::PrinterWarningType::EMPTY_FILAMENT, _L("Sync printer information"));
         return;
     }
-    if (!wxGetApp().plater()->is_same_printer_for_connected_and_selected()) {
-        return;
-    }
+    // Skip is_same_printer_for_connected_and_selected check - we already handle printer selection above
     std::string ams_filament_ids = wxGetApp().app_config->get("ams_filament_ids", p->ams_list_device);
     std::vector<std::string> list2;
     if (!ams_filament_ids.empty()) {
