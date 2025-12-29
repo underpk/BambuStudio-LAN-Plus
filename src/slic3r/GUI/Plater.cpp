@@ -131,6 +131,8 @@
 #include "Widgets/Button.hpp"
 #include "Widgets/StaticGroup.hpp"
 #include "Widgets/MultiNozzleSync.hpp"
+#include "Widgets/ComboBox.hpp"
+#include "Widgets/DropDown.hpp"
 
 #include "GUI_ObjectTable.hpp"
 #include "libslic3r/Thread.hpp"
@@ -1473,6 +1475,124 @@ bool Sidebar::priv::switch_diameter(bool single)
     return wxGetApp().get_tab(Preset::TYPE_PRINTER)->select_preset(preset->name);
 }
 
+// Dialog for selecting printer with nice ComboBox with images
+class SelectPrinterDialog : public DPIDialog
+{
+public:
+    SelectPrinterDialog(wxWindow* parent, const std::vector<MachineObject*>& printers, bool show_offline = false)
+        : DPIDialog(parent, wxID_ANY, _L("Select Printer"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE)
+        , m_printers(printers)
+    {
+        SetBackgroundColour(*wxWHITE);
+
+        wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
+
+        // Title/instruction
+        wxStaticText* label = new wxStaticText(this, wxID_ANY, _L("Select a printer to sync information from:"));
+        main_sizer->Add(label, 0, wxALL, FromDIP(15));
+
+        // Printer ComboBox with images
+        m_comboBox = new ::ComboBox(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0, nullptr, wxCB_READONLY);
+        m_comboBox->SetBackgroundColor(*wxWHITE);
+
+        std::vector<DropDown::Item> drop_items;
+        for (MachineObject* obj : m_printers) {
+            if (!obj) continue;
+
+            bool is_available = obj->is_online() || obj->is_connected();
+
+            DropDown::Item drop_item;
+            wxString name = from_u8(obj->get_dev_name());
+            if (obj->is_lan_mode_printer()) {
+                name += " (LAN)";
+            }
+            if (!is_available && show_offline) {
+                name += " (Offline)";
+            }
+            drop_item.text = name;
+
+            // Load printer preview image
+            try {
+                drop_item.icon = create_scaled_bitmap("printer_preview_" + obj->printer_type, this, 32);
+                drop_item.icon_textctrl = create_scaled_bitmap("printer_preview_" + obj->printer_type, this, 52);
+            } catch (...) {
+                drop_item.icon = create_scaled_bitmap("printer_preview_BL-P001", this, 32);
+                drop_item.icon_textctrl = create_scaled_bitmap("printer_preview_BL-P001", this, 52);
+            }
+
+            drop_item.tip = obj->get_printer_type_display_str();
+            drop_items.push_back(drop_item);
+        }
+
+        m_comboBox->SetItems(drop_items);
+        if (!m_printers.empty()) {
+            m_comboBox->SetSelection(0);
+        }
+
+        // Set size AFTER selection to override messureSize calculations
+        m_comboBox->SetMinSize(wxSize(FromDIP(300), FromDIP(60)));
+        m_comboBox->SetMaxSize(wxSize(FromDIP(300), FromDIP(60)));
+        m_comboBox->SetSize(wxSize(FromDIP(300), FromDIP(60)));
+
+        main_sizer->Add(m_comboBox, 0, wxLEFT | wxRIGHT | wxEXPAND, FromDIP(15));
+
+        main_sizer->AddSpacer(FromDIP(15));
+
+        // Buttons
+        wxBoxSizer* btn_sizer = new wxBoxSizer(wxHORIZONTAL);
+        btn_sizer->AddStretchSpacer();
+
+        StateColor btn_bg_white(std::pair<wxColour, int>(wxColour(206, 206, 206), StateColor::Pressed),
+                                std::pair<wxColour, int>(wxColour(238, 238, 238), StateColor::Hovered),
+                                std::pair<wxColour, int>(*wxWHITE, StateColor::Normal));
+
+        Button* cancel_btn = new Button(this, _L("Cancel"));
+        cancel_btn->SetBackgroundColor(btn_bg_white);
+        cancel_btn->SetBorderColor(wxColour(38, 46, 48));
+        cancel_btn->SetFont(Label::Body_12);
+        cancel_btn->SetMinSize(wxSize(FromDIP(80), FromDIP(30)));
+        cancel_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { EndModal(wxID_CANCEL); });
+
+        StateColor btn_bg_green(std::pair<wxColour, int>(wxColour(27, 136, 68), StateColor::Pressed),
+                                std::pair<wxColour, int>(wxColour(61, 203, 115), StateColor::Hovered),
+                                std::pair<wxColour, int>(wxColour(0, 174, 66), StateColor::Normal));
+
+        Button* ok_btn = new Button(this, _L("Sync"));
+        ok_btn->SetBackgroundColor(btn_bg_green);
+        ok_btn->SetBorderColor(wxColour(0, 174, 66));
+        ok_btn->SetTextColor(*wxWHITE);
+        ok_btn->SetFont(Label::Body_12);
+        ok_btn->SetMinSize(wxSize(FromDIP(80), FromDIP(30)));
+        ok_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { EndModal(wxID_OK); });
+
+        btn_sizer->Add(cancel_btn, 0, wxRIGHT, FromDIP(10));
+        btn_sizer->Add(ok_btn, 0, 0, 0);
+
+        main_sizer->Add(btn_sizer, 0, wxLEFT | wxRIGHT | wxBOTTOM | wxEXPAND, FromDIP(15));
+
+        SetSizer(main_sizer);
+        Fit();
+        CenterOnParent();
+    }
+
+    MachineObject* GetSelectedPrinter() {
+        int sel = m_comboBox->GetSelection();
+        if (sel >= 0 && sel < (int)m_printers.size()) {
+            return m_printers[sel];
+        }
+        return nullptr;
+    }
+
+    void on_dpi_changed(const wxRect& suggested_rect) override {
+        Fit();
+        Refresh();
+    }
+
+private:
+    ::ComboBox* m_comboBox;
+    std::vector<MachineObject*> m_printers;
+};
+
 static bool is_skip_high_flow_printer(const std::string& printer)
 {
     static const std::set<std::string> invalidate_list = {
@@ -1497,7 +1617,6 @@ bool Sidebar::priv::sync_extruder_list(bool &only_external_material, bool force_
         // Get list of available printers
         std::map<std::string, MachineObject*> machine_map = dev->get_my_machine_list();
         std::vector<MachineObject*> available_printers;
-        wxArrayString printer_names;
 
         for (auto& it : machine_map) {
             if (it.second) {
@@ -1505,14 +1624,6 @@ bool Sidebar::priv::sync_extruder_list(bool &only_external_material, bool force_
                 // When force selecting, show all printers; otherwise only online ones
                 if (force_printer_select || is_available) {
                     available_printers.push_back(it.second);
-                    wxString name = from_u8(it.second->get_dev_name());
-                    if (it.second->is_lan_mode_printer()) {
-                        name += " (LAN)";
-                    }
-                    if (!is_available) {
-                        name += " (Offline)";
-                    }
-                    printer_names.Add(name);
                 }
             }
         }
@@ -1523,20 +1634,18 @@ bool Sidebar::priv::sync_extruder_list(bool &only_external_material, bool force_
             return false;
         }
 
-        // Show printer selection dialog
-        wxSingleChoiceDialog dlg(plater, _L("Select a printer to sync information from:"),
-                                 _L("Select Printer"), printer_names);
+        // Show printer selection dialog with images
+        SelectPrinterDialog dlg(plater, available_printers, force_printer_select);
         if (dlg.ShowModal() != wxID_OK) {
             return false;  // User cancelled
         }
 
-        int selection = dlg.GetSelection();
-        if (selection < 0 || selection >= (int)available_printers.size()) {
+        MachineObject* selected = dlg.GetSelectedPrinter();
+        if (!selected) {
             return false;
         }
 
         // Connect to selected printer
-        MachineObject* selected = available_printers[selection];
         dev->set_selected_machine(selected->get_dev_id());
         obj = selected;
     }
