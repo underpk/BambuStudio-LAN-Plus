@@ -1647,7 +1647,12 @@ bool Sidebar::priv::sync_extruder_list(bool &only_external_material, bool force_
 
         // Connect to selected printer
         dev->set_selected_machine(selected->get_dev_id());
-        obj = selected;
+        // Get fresh pointer from DeviceManager to avoid using potentially stale pointer
+        obj = dev->get_selected_machine();
+        if (!obj) {
+            BOOST_LOG_TRIVIAL(error) << __FUNCTION__ << " Failed to get selected machine after set_selected_machine";
+            return false;
+        }
     }
     //if (obj->get_extder_system()->extders.size() != 2) {//wxString(obj->get_preset_printer_model_name(machine_print_name))
     //    plater->pop_warning_and_go_to_device_page(printer_name, Plater::PrinterWarningType::INCONSISTENT, _L("Sync printer information"));
@@ -3703,7 +3708,12 @@ void Sidebar::sync_ams_list(bool is_from_big_sync_btn)
         // Connect to selected printer
         MachineObject* selected = available_printers[selection];
         dev->set_selected_machine(selected->get_dev_id());
-        obj = selected;
+        // Get fresh pointer from DeviceManager to avoid using potentially stale pointer
+        obj = dev->get_selected_machine();
+        if (!obj) {
+            BOOST_LOG_TRIVIAL(error) << __FUNCTION__ << " Failed to get selected machine after set_selected_machine";
+            return;
+        }
 
         // Reload AMS list from the newly selected printer
         GUI::wxGetApp().sidebar().load_ams_list(obj);
